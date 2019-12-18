@@ -1,0 +1,99 @@
+ var calendario = $('#calendar').fullCalendar({
+
+
+        header: {
+            left: 'today,prev,next',
+            center: 'title',
+            right: 'month,agendaWeek,agendaDay'
+        },
+        timeZone :'America/Santiago',
+        // defaultDate: '2019-07-09',
+        minTime: '08:00:00',
+        maxTime: '19:00:00',
+        buttonIcons: true,
+        weekNumbers: false,
+        editable: true,
+        eventLimit: true,
+        events: './controllers/server/reserva/mostrar_eventos.php',
+
+        dayClick: function (date, jsEvent, view) {
+            
+            hoy = new Date();
+            hoy = hoy.getDate() + "-"+ hoy.getMonth()+ "-" +hoy.getFullYear();
+            diaSeleccionado = date.format('DD-MM-Y');
+           
+            if (diaSeleccionado<hoy) {
+              $(cell).addClass('disabled');
+              cell.css("background-color", "red");
+            }else{
+            
+            $('#reserva-modal .modal-body').load('./views/administrador/reserva/vistaModalReserva.php',function(){
+            $('#reserva-modal').modal();
+            $('#iptFechaInicio').val(date.format(('DD-MM-Y')));
+            $('#inicio').val(date);
+
+            
+            $('#ID').val(id);
+            });
+            }
+
+        }, 
+        eventClick: function (calEvent, jsEvent, view) {
+          console.log('EVENTO CON DATOS');
+            $('#evento-modal .modal-body').load('./views/administrador/reserva/vistaModalEditarReserva.php',function(){
+            $('#evento-modal').modal();
+            $('#tituloEvento').text(calEvent.title);
+            $('#reserva_id').val(calEvent.reserva_id);
+            $('#detalle_descripcion').val(calEvent.detalle_descripcion);
+            $('#reserva_tipo_evento_id').val(calEvent.reserva_tipo_evento_id);
+            $('#reserva_veh_id').val(calEvent.reserva_veh_id);
+            $('#title').val(calEvent.title);
+
+            var start = $.fullCalendar.formatDate(calEvent.start, 'DD-MM-Y');
+            $('#start').val(start);
+            var horaStart = $.fullCalendar.formatDate(calEvent.start, 'HH:mm:ss');
+            $('#hora').val(horaStart);
+
+
+            var end = $.fullCalendar.formatDate(calEvent.end, 'DD-MM-Y');
+            $('#end').val(end);
+            var horaEnd = $.fullCalendar.formatDate(calEvent.end, 'HH:mm:ss');
+            $('#horaTermino').val(horaEnd);
+
+
+            var url = './controllers/server/reserva/main.controller.php';
+            var parametros = {
+                                idReserva : calEvent.reserva_id,
+                                accion: 'mostrarDetalleEventos'
+                             }
+            $('.asientosPasajeros').empty();
+            var row = $('<tr></tr>');
+            $.post(url, parametros, function(response){
+              $('#detalle_descripcion').val(response[0][0].detalle_descripcion);
+                
+                for (var i =0; i <response.length; i++) {
+                   for (var x = 0; x <response[i].length; x++) {
+                   
+                    var numPasajero = response[i][x].detalle_num_pasajero;
+                    var nombPasajero = response[i][x].detalle_pasajero_nombre;
+                    var td = $('<td></td>');
+                    td.attr('id','psjro-'+numPasajero);
+                    td.attr('data-toggle','tooltip');
+                    td.attr('data-placement','top');
+                    td.attr('title', nombPasajero);
+                    td.addClass('psjero');
+                    td.html("<i class='fas fa-user'></i>");
+                    row.append(td);
+
+                  }
+                }
+                $('.asientosPasajeros').append(row);
+                
+            },'json') 
+
+
+
+           }) 
+        },  
+    });
+    //fin calendar
